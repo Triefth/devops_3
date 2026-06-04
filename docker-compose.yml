@@ -1,0 +1,68 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      # Puedes crear varias bases de datos si cada microservicio usa la suya
+      MYSQL_DATABASE: despachosdb
+      MYSQL_USER: userdb
+      MYSQL_PASSWORD: passdb
+    ports:
+      - "3306:3306"  # Opcional, solo si necesitas acceso externo
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d 
+    networks:
+      - app-network
+
+  backend-despachos:
+    build: ./backend/back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO   # Contexto = carpeta del microservicio
+    container_name: backend_despachos
+    restart: always
+    ports:
+      - "8081:8081"   # Mapea el 8081 interno del contenedor al 8081 del host
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/despachosdb?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: userdb
+      SPRING_DATASOURCE_PASSWORD: passdb
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+  backend-ventas:
+    build: ./backend/back-Ventas_SpringBoot/Springboot-API-REST
+    container_name: backend_ventas
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ventasdb?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: userdb
+      SPRING_DATASOURCE_PASSWORD: passdb
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+  frontend:
+    build: ./front_despacho
+    container_name: frontend_web
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-despachos
+      - backend-ventas
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

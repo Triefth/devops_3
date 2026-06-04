@@ -1,0 +1,77 @@
+name: Despliegue continuo (CD)
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches:
+      - main  
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_PREFIX: devops        
+  ECS_SERVICE_DESPACHOS: devops-backend-despachos-service
+  ECS_SERVICE_VENTAS: devops-backend-ventas-service
+  ECS_SERVICE_FRONTEND: devops-frontend-service
+  ECS_CLUSTER: devops-cluster
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Obtener el código
+      - name:  Checkout código
+        uses: actions/checkout@v4
+
+      # 2. Configurar credenciales de AWS
+      - name:  Configurar AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 3. Loguearse en Amazon ECR
+      - name:  Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 4. Construir y subir imagen de backend-despachos
+      - name:  Build & Push backend-despachos
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO     # ← Corregido: la carpeta donde está el Dockerfile
+          push: true
+          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY_PREFIX }}-back-despachos:latest
+          platforms: linux/amd64
+
+      # 5. Construir y subir imagen de backend-ventas
+      - name:  Build & Push backend-ventas
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/back-Ventas_SpringBoot/Springboot-API-REST        # ← Corregido
+          push: true
+          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY_PREFIX }}-back-ventas:latest
+          platforms: linux/amd64
+
+      # 6. Construir y subir imagen de frontend
+      - name:  Build & Push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./front_despacho
+          push: true
+          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY_PREFIX }}-frontend:latest
+          platforms: linux/amd64
+
+      # 7. Forzar redespliegue en ECS
+      - name:  Actualizar servicio Despachos
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_DESPACHOS }} --force-new-deployment
+
+      - name:  Actualizar servicio Ventas
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_VENTAS }} --force-new-deployment
+
+      - name:  Actualizar servicio Frontend
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_FRONTEND }} --force-new-deployment
