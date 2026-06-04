@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-despachos-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-despachos
+  template:
+    metadata:
+      labels:
+        app: backend-despachos
+    spec:
+      containers:
+      - name: backend-despachos
+        # La imagen se actualizará automáticamente con el pipeline de GitHub Actions
+        image: devops-back-despachos:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_ENDPOINT
+          value: "mysql" # Apunta al nombre del Service de Kubernetes de tu MySQL
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "db_despachos"
+        - name: DB_USERNAME
+          value: "root"
+        - name: DB_PASSWORD
+          value: "root"
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-despachos-service
+spec:
+  type: ClusterIP # Acceso exclusivo interno dentro del clúster
+  selector:
+    app: backend-despachos
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-despachos-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-despachos-deployment
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60 # Escala cuando el uso de CPU supera el 60%

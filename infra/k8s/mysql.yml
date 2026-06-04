@@ -1,0 +1,40 @@
+# Despliegue de MySQL
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            # Puedes definir una base de datos inicial, aunque Spring Boot creará las demás automáticamente
+            - name: MYSQL_DATABASE
+              value: devops_db
+---
+# Servicio para MySQL
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306
+  # ClusterIP: solamente es accesible dentro del clúster de Kubernetes
+  type: ClusterIP
