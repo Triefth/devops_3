@@ -42,16 +42,17 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $ECR_REGISTRY/devops-back-despachos:$IMAGE_TAG ./backend/back-Despachos_SpringBoot
+        docker build -t $ECR_REGISTRY/devops-back-despachos:$IMAGE_TAG ./backend/back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
         docker push $ECR_REGISTRY/devops-back-despachos:$IMAGE_TAG
 
+    # 5. Build y Push: Backend Ventas
     # 5. Build y Push: Backend Ventas
     - name: Build, tag, y push Backend Ventas
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $ECR_REGISTRY/devops-back-ventas:$IMAGE_TAG ./backend/back-Ventas_SpringBoot
+        docker build -t $ECR_REGISTRY/devops-back-ventas:$IMAGE_TAG ./backend/back-Ventas_SpringBoot/Springboot-API-REST
         docker push $ECR_REGISTRY/devops-back-ventas:$IMAGE_TAG
 
     # 6. Conectar GitHub con tu clúster de Kubernetes
