@@ -16,6 +16,7 @@ spec:
       - name: backend-despachos
         # La imagen se actualizará automáticamente con el pipeline de GitHub Actions
         image: devops-back-despachos:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
         env:

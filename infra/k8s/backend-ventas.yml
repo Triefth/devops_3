@@ -15,6 +15,7 @@ spec:
       containers:
       - name: backend-ventas
         image: devops-back-ventas:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
         env:

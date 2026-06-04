@@ -15,6 +15,7 @@ spec:
       containers:
       - name: frontend
         image: devops-frontend:latest # Esto lo actualizará GitHub Actions después
+        imagePullPolicy: Never
         ports:
         - containerPort: 80 # Asumiendo que tu React sirve con Nginx en el puerto 80
         # ¡IMPORTANTE! El autoscaling no funciona si no defines los recursos (requests):
