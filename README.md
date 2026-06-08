@@ -51,3 +51,40 @@ Configure las variables de entorno en su terminal con credenciales válidas (for
 $env:AWS_ACCESS_KEY_ID="SU_ACCESS_KEY"
 $env:AWS_SECRET_ACCESS_KEY="SU_SECRET_KEY"
 $env:AWS_SESSION_TOKEN="SU_SESSION_TOKEN"
+
+2. Aprovisionamiento de Infraestructura
+Levante los recursos base (VPC, EKS, ECR) ejecutando Terraform en el directorio correspondiente:
+cd infra
+terraform init
+terraform apply
+
+3. Configuración del Contexto de Kubernetes
+Enlace su terminal local con el clúster recién creado en AWS:
+aws eks update-kubeconfig --region us-east-1 --name devops3-cluster
+kubectl apply -f infra/k8s/
+
+Integración y Entrega Continua (CI/CD)
+El proyecto cuenta con un pipeline automatizado definido en .github/workflows/cd.yml. Cada integración de código a la rama principal (main) dispara el siguiente flujo:
+
+Validación de credenciales inyectadas de forma segura vía GitHub Secrets.
+
+Autenticación automática con el registro de Amazon ECR.
+
+Compilación nativa y empaquetado de los tres microservicios en imágenes Docker (:latest).
+
+Publicación segura de los artefactos en la nube.
+
+Actualización continua de los pods en el clúster EKS asegurando una transición sin interrupciones (Zero Downtime Deployment).
+Comandos Operativos y de Monitoreo
+Para validar la salud del sistema o realizar troubleshooting, utilice las siguientes instrucciones:
+
+Validar el estado de los microservicios: kubectl get pods
+
+Consultar el balanceador de carga y obtener la URL pública: kubectl get svc frontend-service
+
+Revisar métricas de escalamiento automático: kubectl get hpa
+
+Extraer logs de un contenedor específico: kubectl logs -f <nombre-del-pod>
+Autor
+Daniel Eduardo Cifuentes Huenten
+Ingeniería y Desarrollo Full-Stack | Arquitectura DevOps
