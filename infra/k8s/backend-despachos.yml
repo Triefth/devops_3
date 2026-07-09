@@ -18,7 +18,7 @@ spec:
         image: devops-back-despachos:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8080
+        - containerPort: 8081
         env:
         - name: DB_ENDPOINT
           value: "mysql" # Apunta al nombre del Service de Kubernetes de tu MySQL
@@ -41,15 +41,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-despachos-service
+  name: backend-despachos
 spec:
   type: ClusterIP # Acceso exclusivo interno dentro del clúster
   selector:
     app: backend-despachos
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      port: 8081
+      targetPort: 8081
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

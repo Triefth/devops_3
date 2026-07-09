@@ -6,10 +6,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': {
-        target: 'https://qic534o8o0.execute-api.us-east-1.amazonaws.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+      '/api/v1/despachos': {
+        target: 'http://localhost:8081',
+        changeOrigin: true
+      },
+      '/api/v1/ventas': {
+        target: 'http://localhost:8082',
+        changeOrigin: true
       }
     }
   }

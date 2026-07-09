@@ -17,7 +17,7 @@ spec:
         image: devops-back-ventas:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8080
+        - containerPort: 8082
         env:
         - name: DB_ENDPOINT
           value: "mysql"
@@ -40,15 +40,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-ventas-service
+  name: backend-ventas
 spec:
   type: ClusterIP
   selector:
     app: backend-ventas
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      port: 8082
+      targetPort: 8082
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

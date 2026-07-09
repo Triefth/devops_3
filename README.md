@@ -19,6 +19,80 @@ La solución soporta las operaciones de un sistema de Ventas y Despachos, integr
 
 El ecosistema está diseñado para ser tolerante a fallos y altamente escalable:
 
+```mermaid
+graph TD
+    subgraph Cliente ["Entorno de Cliente"]
+        Browser["Navegador Web (Usuario)"]
+    end
+
+    subgraph GitHub ["Repositorio y CI/CD"]
+        GHA["GitHub Actions Pipeline"]
+    end
+
+    subgraph AWS ["Nube AWS (us-east-1)"]
+        subgraph ECR ["Amazon Elastic Container Registry"]
+            ECR_F["Repo: devops-frontend"]
+            ECR_D["Repo: devops-back-despachos"]
+            ECR_V["Repo: devops-back-ventas"]
+        end
+
+        subgraph VPC ["VPC (10.0.0.0/16)"]
+            subgraph EKS ["Amazon EKS Cluster (devops3-cluster)"]
+                
+                %% Servicios de Kubernetes
+                SVC_F["frontend-service (LoadBalancer Port 80)"]
+                SVC_D["backend-despachos (ClusterIP Port 8081)"]
+                SVC_V["backend-ventas (ClusterIP Port 8082)"]
+                SVC_M["mysql (ClusterIP Port 3306)"]
+
+                %% Pods de Kubernetes
+                subgraph Pods_F ["Pods Frontend (React + Nginx)"]
+                    Pod_F1["frontend-pod"]
+                end
+                
+                subgraph Pods_D ["Pods Backend Despachos"]
+                    Pod_D1["backend-despachos-pod"]
+                end
+
+                subgraph Pods_V ["Pods Backend Ventas"]
+                    Pod_V1["backend-ventas-pod"]
+                end
+
+                subgraph Pods_M ["Pod Base de Datos (MySQL 8.0)"]
+                    Pod_M1["mysql-pod"]
+                end
+
+                %% HPA
+                HPA_F["frontend-hpa"] -->|Autoscaling CPU >50%| Pods_F
+                HPA_D["backend-despachos-hpa"] -->|Autoscaling CPU >60%| Pods_D
+                HPA_V["backend-ventas-hpa"] -->|Autoscaling CPU >60%| Pods_V
+            end
+        end
+    end
+
+    %% Relaciones de comunicación (Tráfico HTTP/API)
+    Browser -->|1. Carga SPA & Recursos Estáticos| SVC_F
+    SVC_F --> Pod_F1
+    
+    Browser -->|2. Llama APIs /api/v1/...| SVC_F
+    Pod_F1 -->|Proxy Nginx: /api/v1/despachos| SVC_D
+    Pod_F1 -->|Proxy Nginx: /api/v1/ventas| SVC_V
+
+    SVC_D --> Pod_D1
+    SVC_V --> Pod_V1
+
+    Pod_D1 -->|Acceso JPA| SVC_M
+    Pod_V1 -->|Acceso JPA| SVC_M
+    SVC_M --> Pod_M1
+
+    %% Flujo CI/CD
+    GHA -->|Construye e Inyecta Imágenes| ECR
+    GHA -->|Actualiza Manifiestos K8s| EKS
+    ECR_F -.->|Pull Image| Pod_F1
+    ECR_D -.->|Pull Image| Pod_D1
+    ECR_V -.->|Pull Image| Pod_V1
+```
+
 * **Infraestructura como Código (IaC):** Aprovisionamiento automatizado de VPCs, Subredes y el clúster principal utilizando **Terraform**.
 * **Orquestación de Contenedores:** Gestión centralizada de microservicios mediante **Amazon EKS** (Elastic Kubernetes Service).
 * **Registro de Imágenes:** Almacenamiento privado y seguro de artefactos Docker en **Amazon ECR**.
