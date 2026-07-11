@@ -8,7 +8,7 @@ export const TableCompras = () => {
 
   const compras = async () => {
     try {
-      const response = await axios.get("/api/v1/ventas", {
+      const response = await axios.get("/api/ventas/api/v1/ventas", {
         headers:{
           'Content-Type': 'application/json',
           'Accept': 'application/json'
