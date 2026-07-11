@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend-ventas
-        image: devops-back-ventas:latest
+        image: docker tag devops_3-backend-ventas:latest triefth/devops-back-ventas:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8082

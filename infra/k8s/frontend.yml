@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: devops-frontend:latest # Esto lo actualizará GitHub Actions después
+        image: docker tag devops_3-frontend:latest triefth/devops-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80 # Asumiendo que tu React sirve con Nginx en el puerto 80
